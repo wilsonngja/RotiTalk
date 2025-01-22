@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">RotiTalk</string>
+    <string name="welcome">Welcome!</string>
+    <string name="title">RotiTalk</string>
+    <string name="helper_text">Uncover fascinating tidbits about your new pals with these conversation starters.</string>
+    <string name="host_room">Host A Room</string>
+    <string name="join_room">Join A Room</string>
+    <string name="exit_room">Exit Room</string>
+    <string name="question_mark">\?</string>
+</resources>

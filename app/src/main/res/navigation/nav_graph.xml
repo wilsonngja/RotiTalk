@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/mainPageFragment">
+
+    <fragment
+        android:id="@+id/mainPageFragment"
+        android:name="com.wilsonngja.rotitalk.view.MainPageFragment"
+        android:label="MainPageFragment"
+        tools:layout="@layout/fragment_main_page">
+            <action
+                android:id="@+id/action_mainPageFragment_to_matchingPageHostFragment"
+                app:destination="@+id/matchingPageHostFragment"/>
+
+            <action
+                android:id="@+id/action_mainPageFragment_to_matchingPageJoineeFragment"
+                app:destination="@+id/matchingPageJoineeFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/matchingPageJoineeFragment"
+        android:name="com.wilsonngja.rotitalk.view.MatchingPageJoineeFragment"
+        android:label="MatchingPageFragment"
+        tools:layout="@layout/fragment_matching_page_joinee">
+        <argument
+            android:name="roomName"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_matchingPageJoineeFragment_to_mainPageFragment"
+            app:destination="@+id/mainPageFragment"/>
+
+        <action
+            android:id="@+id/action_matchingPageJoineeFragment_to_gamingPageFragment"
+            app:destination="@+id/gamingPageFragment"/>
+
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/matchingPageHostFragment"
+        android:name="com.wilsonngja.rotitalk.view.MatchingPageHostFragment"
+        android:label="MatchingPageFragment"
+        tools:layout="@layout/fragment_matching_page_host">
+        <argument
+            android:name="roomName"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_matchingPageHostFragment_to_mainPageFragment"
+            app:destination="@+id/mainPageFragment"/>
+
+        <action
+            android:id="@+id/action_matchingPageHostFragment_to_gamingPageFragment"
+            app:destination="@+id/gamingPageFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/gamingPageFragment"
+        android:name="com.wilsonngja.rotitalk.view.GamingPageFragment"
+        android:label="GamingPageFragment"
+        tools:layout="@layout/fragment_gaming_page">
+        <argument
+            android:name="players"
+            app:argType="string[]" />
+        <argument
+            android:name="questions"
+            app:argType="string[]" />
+        <argument
+            android:name="background"
+            app:argType="integer[]" />
+        <argument
+            android:name="foreground"
+            app:argType="integer[]" />
+
+        <argument
+            android:name="player"
+            app:argType="string"/>
+
+        <argument
+            android:name="room"
+            app:argType="string"/>
+
+        <action
+            android:id="@+id/action_gamingPageFragment_to_mainPageFragment"
+            app:destination="@+id/mainPageFragment"/>
+
+
+    </fragment>
+</navigation>
