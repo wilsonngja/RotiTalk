@@ -75,13 +75,15 @@
                 android:scaleX="0.75"
                 android:scaleY="0.75"
                 android:src="@drawable/plus"
-                android:layout_marginEnd="30dp"/>
+                android:visibility="gone"
+                />
 
 
             <TextView
                 android:id="@+id/textViewEndGame"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
                 android:layout_marginEnd="30dp"
                 android:background="@drawable/end_game"
                 android:fontFamily="@font/chewy_regular"
@@ -89,6 +91,7 @@
                 android:paddingVertical="4dp"
                 android:text="End Game"
                 android:textColor="@android:color/white"
+                android:layout_marginVertical="20dp"
                 android:textSize="24sp" />
 
             <ImageView
@@ -97,6 +100,7 @@
                 android:layout_height="60dp"
                 android:background="@drawable/successful_button"
                 android:shadowRadius="20"
+                android:visibility="gone"
                 android:src="@drawable/tick" />
 
         </LinearLayout>

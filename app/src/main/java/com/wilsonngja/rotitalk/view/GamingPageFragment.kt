@@ -94,6 +94,8 @@ class GamingPageFragment : Fragment() {
         binding.textViewName.text = viewModel._players[0]
         binding.textViewName.setTextColor(viewModel._foreground[0])
 
+        updateButtonVisibility()
+
         val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.player1_background)!!
         // Ensure the drawable is a GradientDrawable
         (drawable as? GradientDrawable)?.setColor(viewModel._background[0])
@@ -218,6 +220,7 @@ class GamingPageFragment : Fragment() {
 
     private fun skipQuestion() {
         binding.textViewQuestions.text = viewModel._questions[++questionIndex % viewModel._questions.size]
+        updateButtonVisibility()
     }
 
     private fun turnComplete() {
@@ -230,6 +233,8 @@ class GamingPageFragment : Fragment() {
         (drawable as? GradientDrawable)?.setColor(viewModel._background[++playerIndex % viewModel._players.size])
 
         binding.textViewName.background = drawable
+
+        updateButtonVisibility()
     }
 
     private fun monitorMessage() {
@@ -361,5 +366,15 @@ class GamingPageFragment : Fragment() {
         }
 
         findNavController().navigate(R.id.action_gamingPageFragment_to_mainPageFragment)
+    }
+
+    private fun updateButtonVisibility() {
+        if (binding.textViewName.text == viewModel._player) {
+            binding.imageViewCross.visibility = View.GONE
+            binding.imageViewTick.visibility = View.GONE
+        } else {
+            binding.imageViewCross.visibility = View.VISIBLE
+            binding.imageViewTick.visibility = View.VISIBLE
+        }
     }
 }
