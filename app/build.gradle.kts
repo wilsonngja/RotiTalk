@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.android.safe.args)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -76,6 +77,10 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0")
     implementation("org.redisson:redisson:3.21.1")
+    implementation("com.google.firebase:firebase-firestore:25.1.1")
+    implementation("com.firebaseui:firebase-ui-firestore:8.0.2")
+    implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
+    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

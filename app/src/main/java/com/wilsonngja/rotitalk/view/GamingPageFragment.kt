@@ -1,8 +1,6 @@
 package com.wilsonngja.rotitalk.view
 
 import android.app.Dialog
-import android.graphics.PorterDuff
-import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.Log
@@ -12,15 +10,26 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
+import com.firebase.ui.firestore.FirestoreRecyclerOptions
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.firestore
 import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.DeliverCallback
 import com.wilsonngja.rotitalk.R
-import com.wilsonngja.rotitalk.databinding.FragmentGamingPageBinding
+import com.wilsonngja.rotitalk.adapter.ChatRecyclerAdapter
+import com.wilsonngja.rotitalk.databinding.FragmentGamingPage2Binding
+import com.wilsonngja.rotitalk.model.ChatModel
 import com.wilsonngja.rotitalk.viewmodel.GamingPageViewModel
 import io.github.cdimascio.dotenv.Dotenv
 import kotlinx.coroutines.Dispatchers
@@ -34,12 +43,16 @@ import okio.IOException
 import org.json.JSONArray
 import java.io.File
 
+
 class GamingPageFragment : Fragment() {
-    private var _binding : FragmentGamingPageBinding? = null
+
+//    private var _binding : FragmentGamingPageBinding? = null
+    private var _binding : FragmentGamingPage2Binding? = null
     private val binding get() = _binding!!
     private val viewModel: GamingPageViewModel by viewModels()
     private var questionIndex = 0
     private var playerIndex = 0
+    private lateinit var recyclerView : RecyclerView
 
 
     val dotenv = Dotenv.configure()
@@ -66,7 +79,7 @@ class GamingPageFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentGamingPageBinding.inflate(inflater, container, false)
+        _binding = FragmentGamingPage2Binding.inflate(inflater, container, false)
 
         val currentDir = System.getProperty("user.dir")
         val absolutePath = File("").absolutePath
@@ -100,6 +113,41 @@ class GamingPageFragment : Fragment() {
         // Ensure the drawable is a GradientDrawable
         (drawable as? GradientDrawable)?.setColor(viewModel._background[0])
         binding.textViewName.background = drawable
+
+        recyclerView = view.findViewById(R.id.recyclerViewMessage)
+//        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        setupChatRecyclerView()
+
+        binding.imageViewPaperPlane.setOnClickListener {
+            val db = Firebase.firestore
+
+            val playerName = viewModel._player ?: "Unknown"
+            val messageText = binding.textFieldEnterText.text.toString().trim()
+
+            if (messageText.isEmpty()) {
+                Log.d("Firebase", "Message is empty")
+                return@setOnClickListener
+            }
+
+            val chat = hashMapOf(
+                "name" to playerName,
+                "timestamp" to System.currentTimeMillis(),
+                "message" to messageText
+            )
+
+            db.collection(viewModel._roomName)
+                .add(chat)
+                .addOnSuccessListener { documentReference ->
+                    Log.d("Firebase", "DocumentSnapshot added with ID: ${documentReference.id}")
+                    binding.textFieldEnterText.text.clear() // Clear the input field after successful send
+                }
+                .addOnFailureListener { exception ->
+                    Log.e("Firebase", "Error adding document", exception)
+                    Toast.makeText(context, "Failed to send message. Try again.", Toast.LENGTH_SHORT).show()
+                }
+        }
+
 
         binding.textViewEndGame.setOnClickListener {
             val view = layoutInflater.inflate(R.layout.overlay_middle_exit_room, null)
@@ -144,10 +192,13 @@ class GamingPageFragment : Fragment() {
                 }
             }
 
+
+
             dialog.window?.setGravity(Gravity.CENTER)
             dialog.show()
-        }
 
+
+        }
 
         binding.imageViewCross.setOnClickListener {
             lifecycleScope.launch(Dispatchers.IO) {
@@ -172,7 +223,11 @@ class GamingPageFragment : Fragment() {
             }
         }
 
+
+
         monitorMessage()
+
+
     }
 
     private fun shutdownRoom() {
@@ -315,6 +370,16 @@ class GamingPageFragment : Fragment() {
                     }
 
                     if (jsonArray.length() < 2) {
+                        deleteEntireCollection(
+                            viewModel._roomName,
+                            batchSize = 10
+                        ) { success, exception ->
+                            if (success) {
+                                Log.d("Firestore", "Collection deleted successfully.")
+                            } else {
+                                Log.e("Firestore", "Failed to delete collection.", exception)
+                            }
+                        }
                         closeRoom()
                     }
 
@@ -377,4 +442,73 @@ class GamingPageFragment : Fragment() {
             binding.imageViewTick.visibility = View.VISIBLE
         }
     }
+
+    private fun setupChatRecyclerView() {
+        val query = FirebaseFirestore.getInstance().collection(viewModel._roomName)
+//        val query = FirebaseUtils.getChatroomMessageReference("name")
+            .orderBy("timestamp", Query.Direction.ASCENDING)
+
+        // Use the query to set up the RecyclerView adapter
+        val options = FirestoreRecyclerOptions.Builder<ChatModel>()
+            .setQuery(query, ChatModel::class.java)
+            .build()
+
+        query.get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    Log.d("FirestoreDebug", "Document data: ${document.data}")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("FirestoreDebug", "Error fetching documents", e)
+            }
+
+        val adapter = ChatRecyclerAdapter(options, requireContext(), viewModel)
+        val manager = LinearLayoutManager(requireContext())
+        manager.stackFromEnd = true
+        recyclerView.adapter = adapter
+        adapter.startListening()
+
+        adapter.registerAdapterDataObserver(object : AdapterDataObserver() {
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                super.onItemRangeInserted(positionStart, itemCount)
+                if (adapter.itemCount > 0) {
+                    // Scroll to the last item (bottom of the RecyclerView)
+                    recyclerView.smoothScrollToPosition(adapter.itemCount - 1)
+                }
+            }
+        })
+
+    }
+
+
+    fun deleteEntireCollection(collectionName: String, batchSize: Int = 10, onComplete: (Boolean, Exception?) -> Unit) {
+        val db = FirebaseFirestore.getInstance()
+        val collectionRef = db.collection(collectionName)
+
+        fun deleteBatch() {
+            collectionRef.limit(batchSize.toLong()).get().addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val documents = task.result?.documents
+                    if (documents != null && documents.isNotEmpty()) {
+                        // Delete each document in the batch
+                        for (document in documents) {
+                            document.reference.delete()
+                        }
+                        // Call deleteBatch recursively until the collection is empty
+                        deleteBatch()
+                    } else {
+                        // Collection is fully deleted
+                        onComplete(true, null)
+                    }
+                } else {
+                    // Handle failure
+                    onComplete(false, task.exception)
+                }
+            }
+        }
+
+        deleteBatch()
+    }
+
 }

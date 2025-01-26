@@ -60,7 +60,7 @@
         android:id="@+id/gamingPageFragment"
         android:name="com.wilsonngja.rotitalk.view.GamingPageFragment"
         android:label="GamingPageFragment"
-        tools:layout="@layout/fragment_gaming_page">
+        tools:layout="@layout/fragment_gaming_page_2">
         <argument
             android:name="players"
             app:argType="string[]" />
