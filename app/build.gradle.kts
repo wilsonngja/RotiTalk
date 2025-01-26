@@ -81,6 +81,7 @@ dependencies {
     implementation("com.firebaseui:firebase-ui-firestore:8.0.2")
     implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.database)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
