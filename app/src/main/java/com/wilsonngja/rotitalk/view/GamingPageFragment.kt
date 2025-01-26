@@ -28,7 +28,7 @@ import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.DeliverCallback
 import com.wilsonngja.rotitalk.R
 import com.wilsonngja.rotitalk.adapter.ChatRecyclerAdapter
-import com.wilsonngja.rotitalk.databinding.FragmentGamingPage2Binding
+import com.wilsonngja.rotitalk.databinding.FragmentGamingPageBinding
 import com.wilsonngja.rotitalk.model.ChatModel
 import com.wilsonngja.rotitalk.viewmodel.GamingPageViewModel
 import io.github.cdimascio.dotenv.Dotenv
@@ -46,8 +46,7 @@ import java.io.File
 
 class GamingPageFragment : Fragment() {
 
-//    private var _binding : FragmentGamingPageBinding? = null
-    private var _binding : FragmentGamingPage2Binding? = null
+    private var _binding : FragmentGamingPageBinding? = null
     private val binding get() = _binding!!
     private val viewModel: GamingPageViewModel by viewModels()
     private var questionIndex = 0
@@ -79,7 +78,7 @@ class GamingPageFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentGamingPage2Binding.inflate(inflater, container, false)
+        _binding = FragmentGamingPageBinding.inflate(inflater, container, false)
 
         val currentDir = System.getProperty("user.dir")
         val absolutePath = File("").absolutePath
