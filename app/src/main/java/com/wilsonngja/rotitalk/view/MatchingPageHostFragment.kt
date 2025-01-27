@@ -15,6 +15,7 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
@@ -23,6 +24,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.DeliverCallback
 import com.wilsonngja.rotitalk.R
@@ -167,24 +170,11 @@ class MatchingPageHostFragment : Fragment() {
                 useSslProtocol()
             }
 
-            lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    factory.newConnection().use { connection ->
-                        connection.createChannel().use { channel ->
-                            var message = "start_game"
-                            channel.basicPublish(viewModel._roomName, "", null, message.toByteArray())
 
-                        }
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        Log.e("Redis", "Error removing player: ${e.message}")
-                    }
-                }
-            }
             val players = viewModel._players
-            val questions = mutableListOf(
-                "What do you think my favorite kind of movie is?",
+            val db = Firebase.firestore
+
+            val items = arrayListOf("What do you think my favorite kind of movie is?",
                 "What do you think I spend most of my time doing?",
                 "If we met at a party, what vibe would you pick up from me?",
                 "Based on my appearance, do I seem like a morning or night person?",
@@ -237,16 +227,49 @@ class MatchingPageHostFragment : Fragment() {
                 "Would you like to travel to the future or travel back in time? Why?",
                 "Who is your most memorable professor/teacher? Why?",
                 "What is something you find naturally easy to do but turns out to be difficult for others.",
-                "Which country would you like to travel to? Why?"
-            )
-            val background = viewModel._players_background_color
-            val foreground = viewModel._players_foreground_color
+                "Which country would you like to travel to? Why?")
 
-            Log.d("RabbitMQ", "name: $name")
-            val action = MatchingPageHostFragmentDirections.actionMatchingPageHostFragmentToGamingPageFragment(players.toTypedArray(),
-                questions.toTypedArray(), background.toIntArray(), foreground.toIntArray(),
-                name, viewModel._roomName )
-            findNavController().navigate(action)
+            items.shuffle()
+
+            val data = mapOf("questions" to items.toList())
+
+
+            db.collection(viewModel._roomName)
+                .document("questions")
+                .set(data)
+                .addOnSuccessListener {
+                    Log.d("Firebase", "Added Successfully")
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        try {
+                            factory.newConnection().use { connection ->
+                                connection.createChannel().use { channel ->
+                                    var message = "start_game"
+                                    channel.basicPublish(viewModel._roomName, "", null, message.toByteArray())
+
+                                }
+                            }
+                        } catch (e: Exception) {
+                            withContext(Dispatchers.Main) {
+                                Log.e("Redis", "Error removing player: ${e.message}")
+                            }
+                        }
+                    }
+
+                    val background = viewModel._players_background_color
+                    val foreground = viewModel._players_foreground_color
+
+                    Log.d("RabbitMQ", "name: $name")
+                    val action = MatchingPageHostFragmentDirections.actionMatchingPageHostFragmentToGamingPageFragment(players.toTypedArray(),
+                        background.toIntArray(), foreground.toIntArray(),
+                        name, viewModel._roomName )
+                    findNavController().navigate(action)
+                }
+                .addOnFailureListener { exception ->
+                    Log.e("Firebase", "Error adding document", exception)
+                    Toast.makeText(context, "Failed to send message. Try again.", Toast.LENGTH_SHORT).show()
+                }
+
+
         }
 
         bottomSheetDialog.setContentView(view)

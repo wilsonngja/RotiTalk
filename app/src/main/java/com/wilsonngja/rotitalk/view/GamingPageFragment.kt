@@ -95,13 +95,39 @@ class GamingPageFragment : Fragment() {
 
         // Retrieve players and questions
         viewModel._players = arguments?.getStringArray("players")?.toMutableList() ?: mutableListOf()
-        viewModel._questions = arguments?.getStringArray("questions")?.toMutableList() ?: mutableListOf()
+//        viewModel._questions = arguments?.getStringArray("questions")?.toMutableList() ?: mutableListOf()
         viewModel._background = arguments?.getIntArray("background")?.toMutableList() ?: mutableListOf()
         viewModel._foreground = arguments?.getIntArray("foreground")?.toMutableList() ?: mutableListOf()
         viewModel._player = arguments?.getString("player").toString()
         viewModel._roomName = arguments?.getString("room").toString()
 
-        binding.textViewQuestions.text = viewModel._questions[0]
+
+        val db = Firebase.firestore
+        db.collection(viewModel._roomName)
+            .document("questions")
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    // Extract the questions as a MutableList<String>
+                    val questionsList = document.get("questions") as? List<String>
+                    if (questionsList != null) {
+                        viewModel._questions = questionsList.toMutableList()
+                        Log.d("Firestore", viewModel._questions[0])
+                        binding.textViewQuestions.text = viewModel._questions[0]
+                    } else {
+                        Log.e("FirestoreError", "Questions field is null or not a list")
+                    }
+                } else {
+                    Log.e("FirestoreError", "Document does not exist")
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.e("FirestoreError", "Error fetching questions", exception)
+            }
+
+
+
+
 
         binding.textViewName.text = viewModel._players[0]
         binding.textViewName.setTextColor(viewModel._foreground[0])
@@ -136,9 +162,9 @@ class GamingPageFragment : Fragment() {
             )
 
             db.collection(viewModel._roomName)
-                .add(chat)
+                .document("chat")
+                .set(chat)
                 .addOnSuccessListener { documentReference ->
-                    Log.d("Firebase", "DocumentSnapshot added with ID: ${documentReference.id}")
                     binding.textFieldEnterText.text.clear() // Clear the input field after successful send
                 }
                 .addOnFailureListener { exception ->

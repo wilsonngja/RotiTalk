@@ -64,9 +64,9 @@
         <argument
             android:name="players"
             app:argType="string[]" />
-        <argument
-            android:name="questions"
-            app:argType="string[]" />
+<!--        <argument-->
+<!--            android:name="questions"-->
+<!--            app:argType="string[]" />-->
         <argument
             android:name="background"
             app:argType="integer[]" />
